@@ -4,7 +4,9 @@
 
 pub mod pangui_template;
 pub mod taffy_helpers;
+pub mod torin_helpers;
 pub use taffy_helpers::TaffyTreeBuilder;
+pub use torin_helpers::TorinTreeBuilder;
 
 #[cfg(feature = "taffy03")]
 pub mod taffy_03_helpers;

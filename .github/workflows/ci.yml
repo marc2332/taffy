@@ -316,7 +316,7 @@ jobs:
       - name: Install fontconfig
         run: sudo apt-get update && sudo apt-get install libfontconfig-dev
       - name: Run Torin benchmarks first
-        run: cd benches && cargo bench --bench torin -- --noplot
+        run: cd benches && cargo bench --bench flexbox -- --noplot Torin
         env:
           RUSTFLAGS: "-C opt-level=0"
       - run: cd benches && cargo bench --no-run

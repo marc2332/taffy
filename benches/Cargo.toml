@@ -40,11 +40,6 @@ grid-alternating-spans = []
 bench = false
 
 [[bench]]
-name = "torin"
-path = "benches/torin.rs"
-harness = false
-
-[[bench]]
 name = "tree_creation"
 path = "benches/tree_creation.rs"
 harness = false

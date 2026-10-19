@@ -7,6 +7,7 @@ use taffy::style::Style as TaffyStyle;
 
 use taffy_benchmarks::{
     bench_layout, benchmark_group, BuildTree, BuildTreeExt, FixedStyleGenerator, GenStyle, TaffyTreeBuilder,
+    TorinTreeBuilder,
 };
 
 #[cfg(feature = "taffy03")]
@@ -96,6 +97,7 @@ macro_rules! benchmark_each_library {
         run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
 
         run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy main", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
+        run_benchmark!(TorinTreeBuilder<_, _>, "Torin", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
     };
 }
 
@@ -265,6 +267,16 @@ fn super_deep_benchmarks(c: &mut Criterion) {
         run_benchmark!(
             TaffyTreeBuilder<_,_>,
             "Taffy main",
+            "",
+            group,
+            builder,
+            depth,
+            || SuperDeepStyleGen,
+            builder.build_super_deep_hierarchy(*depth, 3)
+        );
+        run_benchmark!(
+            TorinTreeBuilder<_,_>,
+            "Torin",
             "",
             group,
             builder,
