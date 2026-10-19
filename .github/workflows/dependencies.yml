@@ -1,16 +1,17 @@
 name: Dependencies
 
 on:
-  pull_request:
-    paths:
-      - '**/Cargo.toml'
-      - 'deny.toml'
-  push:
-    paths:
-      - '**/Cargo.toml'
-      - 'deny.toml'
-    branches-ignore:
-      - 'dependabot/**'
+  workflow_dispatch:
+  # pull_request:
+  #   paths:
+  #     - '**/Cargo.toml'
+  #     - 'deny.toml'
+  # push:
+  #   paths:
+  #     - '**/Cargo.toml'
+  #     - 'deny.toml'
+  #   branches-ignore:
+  #     - 'dependabot/**'
   # schedule:
   #   - cron: "0 0 * * 0"
 

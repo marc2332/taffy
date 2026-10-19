@@ -132,6 +132,19 @@ Note that the table below contains multiple different units (seconds vs. millise
 [v3.2.1]: https://github.com/facebook/yoga/commit/042f5013152eb81c1552dec945b88f7b95ca350f
 [e747f6e]: https://github.com/DioxusLabs/taffy/commit/e747f6e5b94e7b0586d807aeb681b48f9a005f04
 
+### Taffy vs. Torin benchmarks
+
+This Criterion suite compares Taffy `0.15.0` with Torin `0.5.0-rc.10` on the same generated fixtures. Tree creation and cache invalidation are excluded. Times are the Criterion estimates from a local run pinned to one CPU.
+
+| Benchmark | Node Count | Depth | Taffy | Torin |
+| --- | ---: | ---: | ---: | ---: |
+| Wide stack | 10,001 | 2 | 1.985 ms | 0.858 ms |
+| Deep binary stack | 16,383 | 14 | 8.214 ms | 1.965 ms |
+| Balanced aligned stack | 9,841 | 9 | 3.640 ms | 1.390 ms |
+| Flex row | 20,001 | 2 | 5.565 ms | 3.227 ms |
+
+Run with `cd benches && cargo bench --bench torin`. These workloads are distinct from the historical Yoga comparison above.
+
 ## Contributions
 
 [Contributions welcome](https://github.com/DioxusLabs/taffy/blob/main/CONTRIBUTING.md):

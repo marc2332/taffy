@@ -1,7 +1,11 @@
 use std::{collections::HashMap, hint::black_box, time::Instant};
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use taffy_benchmarks::{benchmark_group, iter_timed};
+use taffy::prelude::{
+    AlignItems, AvailableSpace, Dimension, Display, FlexDirection, JustifyContent, NodeId, Size as TaffySize, Style,
+    TaffyTree,
+};
+use taffy_benchmarks::{benchmark_group, iter_timed, TaffyLayoutTree};
 use torin::prelude::*;
 
 struct Fixture {
@@ -141,6 +145,62 @@ impl Scenario {
     }
 }
 
+fn build_taffy_tree(fixture: &Fixture) -> TaffyLayoutTree {
+    let mut tree = TaffyTree::new();
+    tree.disable_rounding();
+
+    let mut ids = Vec::with_capacity(fixture.nodes.len());
+    for id in 0..fixture.nodes.len() {
+        let node = &fixture.nodes[&id].3;
+        ids.push(tree.new_leaf(taffy_style(node)).expect("create Taffy node"));
+    }
+
+    for id in 0..fixture.nodes.len() {
+        let children: Vec<NodeId> = fixture.nodes[&id].1.iter().map(|child| ids[*child]).collect();
+        tree.set_children(ids[id], &children).expect("set Taffy children");
+    }
+
+    TaffyLayoutTree::new((tree, ids[0]))
+}
+
+fn taffy_style(node: &Node) -> Style {
+    fn dimension(size: &Size) -> (Dimension, f32) {
+        match size {
+            Size::Pixels(value) => (Dimension::length(value.get()), 0.),
+            Size::Percentage(value) => (Dimension::percent(value.get() / 100.), 0.),
+            Size::Fill => (Dimension::auto(), 1.),
+            Size::Inner => (Dimension::auto(), 0.),
+            _ => panic!("unsupported benchmark dimension"),
+        }
+    }
+
+    let (width, flex_grow) = dimension(&node.width);
+    let (height, _) = dimension(&node.height);
+    Style {
+        display: Display::Flex,
+        size: TaffySize { width, height },
+        flex_direction: match node.direction {
+            Direction::Vertical => FlexDirection::Column,
+            Direction::Horizontal => FlexDirection::Row,
+        },
+        flex_grow,
+        flex_shrink: 0.,
+        align_items: match node.cross_alignment {
+            Alignment::Start => AlignItems::START,
+            Alignment::Center => AlignItems::CENTER,
+            Alignment::End => AlignItems::END,
+            _ => panic!("unsupported benchmark cross alignment"),
+        },
+        justify_content: match node.main_alignment {
+            Alignment::Start => JustifyContent::START,
+            Alignment::Center => JustifyContent::CENTER,
+            Alignment::End => JustifyContent::END,
+            _ => panic!("unsupported benchmark main alignment"),
+        },
+        ..Style::default()
+    }
+}
+
 fn add_child(
     nodes: &mut HashMap<usize, (Option<usize>, Vec<usize>, u16, Node)>,
     parent: usize,
@@ -158,7 +218,7 @@ fn torin_benchmarks(c: &mut Criterion) {
     for scenario in Scenario::ALL {
         let fixture = scenario.build();
         let node_count = fixture.nodes.len();
-        group.bench_function(format!("{} ({node_count} nodes)", scenario.name()), |b| {
+        group.bench_function(format!("Torin / {} ({node_count} nodes)", scenario.name()), |b| {
             let mut layout = Torin::new();
             let mut measurer = Some(NoopMeasurer);
             let root_area = Area::from_size((1000., 1000.).into());
@@ -169,6 +229,24 @@ fn torin_benchmarks(c: &mut Criterion) {
                 let start = Instant::now();
                 layout.measure(0, root_area, &mut measurer, &fixture);
                 black_box(&layout);
+                start.elapsed()
+            });
+        });
+
+        group.bench_function(format!("Taffy / {} ({node_count} nodes)", scenario.name()), |b| {
+            let mut layout = build_taffy_tree(&fixture);
+
+            iter_timed(b, || {
+                layout.mark_all_dirty();
+                let start = Instant::now();
+                layout
+                    .tree
+                    .compute_layout(
+                        layout.root,
+                        TaffySize { width: AvailableSpace::Definite(1000.), height: AvailableSpace::Definite(1000.) },
+                    )
+                    .expect("compute Taffy layout");
+                black_box(&layout.tree);
                 start.elapsed()
             });
         });
